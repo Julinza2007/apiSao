@@ -5,25 +5,20 @@ import mongoose from 'mongoose';
 import morgan from 'morgan';
 // config vars
 const PORT = process.env.PORT || 3000;
-const DB   = process.env.DB   || 'mongodb://localhost:27017/sao';
+const DB   = process.env.DB   || 'mongodb://127.0.0.1/apisao';
 // objeto app
 const app = express();
 // middleware de aplicacion
 app.use(morgan('dev'));  // middleware de logs
 app.use(express.json()); // parsea los bodys en JSON
 // conectar a la DB
-mongoose.set('useUnifiedTopology', true);
-mongoose.set('useFindAndModify', false);
-mongoose
-  .connect(DB, { useNewUrlParser: true })
-  .then(() => {
-    console.log(`DB connected @ ${DB}`);
-  })
+mongoose.connect(DB)
+  .then(() => console.log(`Connected to ${DB}`))
   .catch(err => console.error(`Connection error ${err}`));
-
+ 
 // esquemas y modelos
 const CharacterSchema = new mongoose.Schema({
-  id: { type: Number, unique: true },
+  id: { type: Number},
   name: String,
   age: Number,
   profession: String,
@@ -45,12 +40,6 @@ app.get('/api/characters', (req, res) => {
   Character.find()
     .then(characters => res.status(200).json(characters)); // responde 200 OK
 });
-// GET /api/characters/search/:name
-app.get('/api/characters/search/:name', (req, res) => {
-  Character.find({ name: { "$regex": req.params.name, "$options": "i" } })
-    .then(characters => res.status(200).json(characters));
-    // .catch(err => res.status(403).json({ err: err.message }));
-});
 
 // un personaje por ID
 app.get('/api/characters/:id', (req, res) => {
@@ -69,11 +58,18 @@ app.post('/api/characters', (req, res) => {
   newCharacter.save()
     .then(character => res.status(201).json(character)); // responde 201 Created
 });
+
 // borrar un personaje 
 app.delete('/api/characters/:id', (req, res) => {
   Character.deleteOne({ id: req.params.id })
     .then(() => res.status(200).json({ msg: 'Character deleted!' }));
 });
+
+app.delete('/api/characters', (req, res) => {
+  Character.deleteMany()
+    .then(() => res.status(200).json({ msg: 'Characters deleted!' }));
+});
+
 // modificar un personaje
 app.put('/api/characters/:id', (req, res) => {
   Character.findOneAndUpdate({ id: req.params.id }, req.body, { new: true })
@@ -85,5 +81,5 @@ app.use((req, res) => {
 });
 // listen
 app.listen(PORT, () => {
-  console.log('Server andando');
+  console.log('Server andando en http://localhost:' + PORT);
 });
