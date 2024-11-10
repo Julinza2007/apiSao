@@ -1,24 +1,3 @@
-<<<<<<< HEAD
-const express = require("express");
-const mongoose = require("mongoose");
-
-const PORT = 3000;
-const DB = "mongodb://127.0.0.1:27017";
-
-const app = express();
-
-    mongoose.connect(DB, {}, (err, res) => {
-    if (!err) {
-        console.log("Base de datos conectada!");
-    } else {
-        console.log('Error al conectarse a la base de datos: ' + err);
-    }
-});
-
-app.listen(3000, () => {
-    console.log("Server listening on port 3000");
-})
-=======
 // imports
 // const express = require('express'); CommonJS
 import express from 'express';
@@ -29,9 +8,10 @@ const PORT = process.env.PORT || 3000;
 const DB   = process.env.DB   || 'mongodb://127.0.0.1/apisao';
 // objeto app
 const app = express();
+app.use(express.json());
 // middleware de aplicacion
 app.use(morgan('dev'));  // middleware de logs
-app.use(express.json()); // parsea los bodys en JSON
+ // parsea los bodys en JSON
 // conectar a la DB
 mongoose.connect(DB)
   .then(() => console.log(`Connected to ${DB}`))
@@ -39,15 +19,16 @@ mongoose.connect(DB)
  
 // esquemas y modelos
 const CharacterSchema = new mongoose.Schema({
-  id: { type: Number},
+  id: {type: Number, unique: true},
   name: String,
   age: Number,
   profession: String,
   typeOfSword: String,
   img: String,
   description: String,
-  link: String,
+  link: String
 });
+
 const Character = mongoose.model('Character', CharacterSchema);
 // rutas de la API
 // todos los personajes
@@ -74,11 +55,17 @@ app.get('/api/characters/:id', (req, res) => {
 // crear un personaje 
 app.post('/api/characters', (req, res) => {
   console.log('El body vale: ', req.body);
-  const { id, name, img, profession } = req.body;
-  const newCharacter = new Character({ id, name, img, profession });
+  const { id, name, age, profession, typeOfSword, img, description, link } = req.body;
+  const newCharacter = new Character({ id, name, age, profession, typeOfSword, img, description, link });
   newCharacter.save()
     .then(character => res.status(201).json(character)); // responde 201 Created
 });
+
+app.post('/api/characters', (req, res) => {
+   const characters = Character.insertMany(req.body)
+    .then(characters => res.status(201).json(characters));
+  })
+
 
 // borrar un personaje 
 app.delete('/api/characters/:id', (req, res) => {
@@ -104,4 +91,3 @@ app.use((req, res) => {
 app.listen(PORT, () => {
   console.log('Server andando en http://localhost:' + PORT);
 });
->>>>>>> 25e13df14bf14de9b8c612680bbae297d829e9fc
